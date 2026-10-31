@@ -1,0 +1,337 @@
+{
+ "default": "navy",
+ "outfits": [
+  {
+   "id": "navy",
+   "name": "藏青职业套装（默认）",
+   "keywords": [
+    "西装",
+    "职业",
+    "套装",
+    "藏青"
+   ],
+   "idle": "/media/avatar_idle.mp4",
+   "talk": "/media/avatar_talk.mp4",
+   "poster": "/media/avatar_poster.jpg",
+   "lipsyncAvatar": "xiaoxin"
+  },
+  {
+   "id": "spring_blouse",
+   "name": "白色蝴蝶结衬衫配薄荷绿长裙",
+   "keywords": [
+    "衬衫",
+    "长裙",
+    "薄荷"
+   ],
+   "idle": "/media/outfits/spring_blouse/idle.mp4",
+   "talk": "/media/outfits/spring_blouse/talk.mp4",
+   "poster": "/media/outfits/spring_blouse/poster.jpg",
+   "lipsyncAvatar": "spring_blouse",
+   "ref": "SPR-0015"
+  },
+  {
+   "id": "autumn_coat",
+   "name": "驼色风衣配棕色针织长裙",
+   "keywords": [
+    "风衣",
+    "大衣",
+    "驼色"
+   ],
+   "idle": "/media/outfits/autumn_coat/idle.mp4",
+   "talk": "/media/outfits/autumn_coat/talk.mp4",
+   "poster": "/media/outfits/autumn_coat/poster.jpg",
+   "lipsyncAvatar": "autumn_coat",
+   "ref": "AUT-0037"
+  },
+  {
+   "id": "festive_red",
+   "name": "红色马海毛开衫配灰色阔腿裤",
+   "keywords": [
+    "开衫",
+    "红色",
+    "喜庆"
+   ],
+   "idle": "/media/outfits/festive_red/idle.mp4",
+   "talk": "/media/outfits/festive_red/talk.mp4",
+   "poster": "/media/outfits/festive_red/poster.jpg",
+   "lipsyncAvatar": "festive_red",
+   "ref": "WIN-0196"
+  },
+  {
+   "id": "black_satin_slip",
+   "name": "黑色缎面吊带中长裙",
+   "keywords": [
+    "吊带",
+    "缎面",
+    "黑裙"
+   ],
+   "idle": "/media/outfits/black_satin_slip/idle.mp4",
+   "talk": "/media/outfits/black_satin_slip/talk.mp4",
+   "poster": "/media/outfits/black_satin_slip/poster.jpg",
+   "lipsyncAvatar": "black_satin_slip"
+  },
+  {
+   "id": "gold_slit_gown",
+   "name": "香槟金高开叉缎面长礼服",
+   "keywords": [
+    "礼服",
+    "晚礼服",
+    "开叉",
+    "金色"
+   ],
+   "idle": "/media/outfits/gold_slit_gown/idle.mp4",
+   "talk": "/media/outfits/gold_slit_gown/talk.mp4",
+   "poster": "/media/outfits/gold_slit_gown/poster.jpg",
+   "lipsyncAvatar": "gold_slit_gown"
+  },
+  {
+   "id": "off_shoulder_lbd",
+   "name": "黑色露肩小黑裙",
+   "keywords": [
+    "小黑裙",
+    "露肩"
+   ],
+   "idle": "/media/outfits/off_shoulder_lbd/idle.mp4",
+   "talk": "/media/outfits/off_shoulder_lbd/talk.mp4",
+   "poster": "/media/outfits/off_shoulder_lbd/poster.jpg",
+   "lipsyncAvatar": "off_shoulder_lbd"
+  },
+  {
+   "id": "retro_leather",
+   "name": "棕色皮夹克配芥末黄喇叭裤",
+   "keywords": [
+    "皮夹克",
+    "喇叭裤",
+    "复古"
+   ],
+   "idle": "/media/outfits/retro_leather/idle.mp4",
+   "talk": "/media/outfits/retro_leather/talk.mp4",
+   "poster": "/media/outfits/retro_leather/poster.jpg",
+   "lipsyncAvatar": "retro_leather",
+   "ref": "AUT-0084"
+  },
+  {
+   "id": "yellow_floral",
+   "name": "鹅黄碎花层叠雪纺长裙",
+   "keywords": [
+    "碎花",
+    "黄色",
+    "雪纺"
+   ],
+   "idle": "/media/outfits/yellow_floral/idle.mp4",
+   "talk": "/media/outfits/yellow_floral/talk.mp4",
+   "poster": "/media/outfits/yellow_floral/poster.jpg",
+   "lipsyncAvatar": "yellow_floral",
+   "ref": "SPR-0035"
+  },
+  {
+   "id": "blue_shirtdress",
+   "name": "蓝白条纹衬衫裙",
+   "keywords": [
+    "衬衫裙",
+    "条纹"
+   ],
+   "idle": "/media/outfits/blue_shirtdress/idle.mp4",
+   "talk": "/media/outfits/blue_shirtdress/talk.mp4",
+   "poster": "/media/outfits/blue_shirtdress/poster.jpg",
+   "lipsyncAvatar": "blue_shirtdress",
+   "ref": "SUM-0164"
+  },
+  {
+   "id": "royal_blue_satin",
+   "name": "宝蓝缎面垂领修身裙",
+   "keywords": [
+    "宝蓝",
+    "垂领"
+   ],
+   "idle": "/media/outfits/royal_blue_satin/idle.mp4",
+   "talk": "/media/outfits/royal_blue_satin/talk.mp4",
+   "poster": "/media/outfits/royal_blue_satin/poster.jpg",
+   "lipsyncAvatar": "royal_blue_satin",
+   "ref": "PTY-0023"
+  },
+  {
+   "id": "emerald_satin",
+   "name": "黑色T恤配墨绿缎面长裙",
+   "keywords": [
+    "墨绿",
+    "T恤"
+   ],
+   "idle": "/media/outfits/emerald_satin/idle.mp4",
+   "talk": "/media/outfits/emerald_satin/talk.mp4",
+   "poster": "/media/outfits/emerald_satin/poster.jpg",
+   "lipsyncAvatar": "emerald_satin",
+   "ref": "SUM-0206"
+  },
+  {
+   "id": "lavender_gown",
+   "name": "薰衣草紫立领雪纺礼服",
+   "keywords": [
+    "紫色",
+    "薰衣草"
+   ],
+   "idle": "/media/outfits/lavender_gown/idle.mp4",
+   "talk": "/media/outfits/lavender_gown/talk.mp4",
+   "poster": "/media/outfits/lavender_gown/poster.jpg",
+   "lipsyncAvatar": "lavender_gown",
+   "ref": "PTY-0041"
+  },
+  {
+   "id": "polka_dot",
+   "name": "藏青白波点吊带长裙",
+   "keywords": [
+    "波点",
+    "圆点"
+   ],
+   "idle": "/media/outfits/polka_dot/idle.mp4",
+   "talk": "/media/outfits/polka_dot/talk.mp4",
+   "poster": "/media/outfits/polka_dot/poster.jpg",
+   "lipsyncAvatar": "polka_dot",
+   "ref": "SUM-0194"
+  },
+  {
+   "id": "red_mermaid",
+   "name": "红色蝴蝶结高领配灰色鱼尾裙",
+   "keywords": [
+    "鱼尾裙",
+    "高领"
+   ],
+   "idle": "/media/outfits/red_mermaid/idle.mp4",
+   "talk": "/media/outfits/red_mermaid/talk.mp4",
+   "poster": "/media/outfits/red_mermaid/poster.jpg",
+   "lipsyncAvatar": "red_mermaid",
+   "ref": "WIN-0006"
+  },
+  {
+   "id": "white_blazer_dress",
+   "name": "象牙白双排扣深V西装裙",
+   "keywords": [
+    "西装裙",
+    "白色"
+   ],
+   "idle": "/media/outfits/white_blazer_dress/idle.mp4",
+   "talk": "/media/outfits/white_blazer_dress/talk.mp4",
+   "poster": "/media/outfits/white_blazer_dress/poster.jpg",
+   "lipsyncAvatar": "white_blazer_dress"
+  },
+  {
+   "id": "fur_burgundy",
+   "name": "毛绒短外套配酒红喇叭裤",
+   "keywords": [
+    "毛绒",
+    "酒红"
+   ],
+   "idle": "/media/outfits/fur_burgundy/idle.mp4",
+   "talk": "/media/outfits/fur_burgundy/talk.mp4",
+   "poster": "/media/outfits/fur_burgundy/poster.jpg",
+   "lipsyncAvatar": "fur_burgundy",
+   "ref": "WIN-0005"
+  },
+  {
+   "id": "beige_knit_bodycon",
+   "name": "驼色罗纹高领包臀针织裙",
+   "keywords": [
+    "包臀",
+    "针织",
+    "毛衣裙"
+   ],
+   "idle": "/media/outfits/beige_knit_bodycon/idle.mp4",
+   "talk": "/media/outfits/beige_knit_bodycon/talk.mp4",
+   "poster": "/media/outfits/beige_knit_bodycon/poster.jpg",
+   "lipsyncAvatar": "beige_knit_bodycon",
+   "ref": "SXY-0032"
+  },
+  {
+   "id": "tulle_jacket",
+   "name": "黑色粗花呢短外套配白色纱裙",
+   "keywords": [
+    "纱裙",
+    "粗花呢",
+    "小香风"
+   ],
+   "idle": "/media/outfits/tulle_jacket/idle.mp4",
+   "talk": "/media/outfits/tulle_jacket/talk.mp4",
+   "poster": "/media/outfits/tulle_jacket/poster.jpg",
+   "lipsyncAvatar": "tulle_jacket",
+   "ref": "SPR-0227"
+  },
+  {
+   "id": "mint_frill",
+   "name": "薄荷绿露肩荷叶边短裙",
+   "keywords": [
+    "荷叶边",
+    "露肩短裙"
+   ],
+   "idle": "/media/outfits/mint_frill/idle.mp4",
+   "talk": "/media/outfits/mint_frill/talk.mp4",
+   "poster": "/media/outfits/mint_frill/poster.jpg",
+   "lipsyncAvatar": "mint_frill",
+   "ref": "SPR-0029"
+  },
+  {
+   "id": "blue_tulle_party",
+   "name": "粉蓝纱裙派对小礼服配长手套",
+   "keywords": [
+    "派对",
+    "纱裙礼服",
+    "手套"
+   ],
+   "idle": "/media/outfits/blue_tulle_party/idle.mp4",
+   "talk": "/media/outfits/blue_tulle_party/talk.mp4",
+   "poster": "/media/outfits/blue_tulle_party/poster.jpg",
+   "lipsyncAvatar": "blue_tulle_party",
+   "ref": "PTY-0007"
+  },
+  {
+   "id": "qipao",
+   "name": "民国风墨绿提花旗袍",
+   "keywords": [
+    "旗袍",
+    "民国",
+    "中式"
+   ],
+   "idle": "/media/outfits/qipao/idle.mp4",
+   "talk": "/media/outfits/qipao/talk.mp4",
+   "poster": "/media/outfits/qipao/poster.jpg",
+   "lipsyncAvatar": "qipao"
+  },
+  {
+   "id": "sailor",
+   "name": "成熟款海军领上衣配阔腿裤",
+   "keywords": [
+    "水手服",
+    "海军"
+   ],
+   "idle": "/media/outfits/sailor/idle.mp4",
+   "talk": "/media/outfits/sailor/talk.mp4",
+   "poster": "/media/outfits/sailor/poster.jpg",
+   "lipsyncAvatar": "sailor"
+  },
+  {
+   "id": "black_stockings",
+   "name": "黑色丝绒连衣裙配黑丝",
+   "keywords": [
+    "黑丝",
+    "丝袜",
+    "丝绒"
+   ],
+   "idle": "/media/outfits/black_stockings/idle.mp4",
+   "talk": "/media/outfits/black_stockings/talk.mp4",
+   "poster": "/media/outfits/black_stockings/poster.jpg",
+   "lipsyncAvatar": "black_stockings"
+  },
+  {
+   "id": "pink_mini",
+   "name": "粉色泡泡袖衬衫配百褶超短裙",
+   "keywords": [
+    "粉色",
+    "超短裙",
+    "淑女"
+   ],
+   "idle": "/media/outfits/pink_mini/idle.mp4",
+   "talk": "/media/outfits/pink_mini/talk.mp4",
+   "poster": "/media/outfits/pink_mini/poster.jpg",
+   "lipsyncAvatar": "pink_mini"
+  }
+ ]
+}

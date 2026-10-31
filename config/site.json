@@ -1,0 +1,9 @@
+{
+  "name": "征信服务区",
+  "subtitle": "个人信用报告查询 · 异议受理 · 信用知识普及",
+  "bank": "",
+  "hotline": "",
+  "attractAfterSec": 60,
+  "showText": false,
+  "mouthMode": "loop"
+}

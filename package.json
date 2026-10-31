@@ -1,0 +1,47 @@
+{
+  "name": "zhengxin-digital-human",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "银行展厅征信服务数字人（竖屏、语音交互、离线可用）",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IVMYM/zhengxin-dh.git"
+  },
+  "keywords": [
+    "digital-human",
+    "kiosk",
+    "tts",
+    "edge-tts",
+    "asr",
+    "sherpa-onnx",
+    "llm",
+    "musetalk",
+    "lip-sync"
+  ],
+  "scripts": {
+    "dev": "node --watch-path=server.mjs --watch-path=lib server.mjs",
+    "start": "node server.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "prewarm": "node scripts/prewarm-tts.mjs female,female2",
+    "shots": "node scripts/screenshots.mjs",
+    "check:voice": "node scripts/check-voice.mjs",
+    "kiosk:mac": "bash scripts/kiosk-mac.sh",
+    "prewarm:lipsync": "node scripts/prewarm-lipsync.mjs female,female2",
+    "gate:build": "python3 scripts/build-talk-gate.py",
+    "gate:sample": "node scripts/render-gate-sample.mjs",
+    "check:stream": "node scripts/check-stream-tts.mjs",
+    "check:gate": "node scripts/check-gate-browser.mjs",
+    "check:av": "node scripts/check-av-sync.mjs",
+    "check:mic": "node scripts/check-mic-ui.mjs",
+    "check:layout": "node scripts/check-layout-panel.mjs",
+    "check:fullscreen": "node scripts/check-fullscreen.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.1"
+  }
+}

@@ -1,0 +1,43 @@
+node_modules/
+public/asr/*.data
+public/asr/*.wasm
+cache/tts/*.part
+cache/lipsync/
+gpu-lipsync/avatars/*/frames/
+gpu-lipsync/avatars/*/prepared.pt
+.env
+.env.*
+!.env.example
+out/
+__pycache__/
+
+# 本地密钥与部署变量（绝不提交）
+.dev.vars
+.dev.vars.*
+*.pem
+*.key
+.secrets/
+admin-password*.txt
+# 运行时数据与缓存（cache/tts 里随仓库附带的知识库预合成音频已在版本库中，新增缓存不再提交）
+cache/
+data/*.json
+data/*.tmp
+# 构建/工具产物
+.wrangler/
+dist/
+coverage/
+*.log
+.DS_Store
+# 大文件：离线识别模型、MuseTalk 权重、打包产物
+public/asr/*.data
+public/asr/*.wasm
+gpu-lipsync/models/
+gpu-lipsync/ms-bundle*/
+gpu-lipsync/**/*.pth
+gpu-lipsync/**/*.pt
+gpu-lipsync/**/*.safetensors
+gpu-lipsync/**/*.bin
+*.tar
+*.tar.gz
+*.zip
+out_*.tar
