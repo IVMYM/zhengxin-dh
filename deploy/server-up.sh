@@ -16,6 +16,8 @@ if ! grep -q '^TS_BIND_IP=' .env; then
   printf 'TS_BIND_IP=%s\nTS_BIND_PORT=43200\n' "${TSIP:-127.0.0.1}" >> .env
 fi
 
+grep -q '^APP_UID=' .env || printf 'APP_UID=%s\nAPP_GID=%s\n' "$(id -u)" "$(id -g)" >> .env
+
 # 端口检查：43200 若已被别的程序占用（不是本容器）则停止
 if ss -ltnH | awk '{print $4}' | grep -Eq '[:.]43200$'; then
   if ! docker ps --format '{{.Names}}' | grep -qx zhengxin-dh; then
