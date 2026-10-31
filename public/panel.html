@@ -93,6 +93,20 @@
     </form>
   </dialog>
 
+  <dialog id="loginDlg">
+    <form method="dialog" id="loginForm">
+      <h3>管理员登录</h3>
+      <p class="muted">编辑、合成和播放控制需要管理员密码。</p>
+      <label>密码 <input type="password" id="loginPw" autocomplete="current-password" required></label>
+      <div class="muted" id="loginErr" hidden></div>
+      <div class="dlg-actions">
+        <span style="flex:1"></span>
+        <button type="button" id="loginCancel">取消</button>
+        <button type="submit" class="primary">登录</button>
+      </div>
+    </form>
+  </dialog>
+
   <dialog id="importDlg">
     <form method="dialog" id="importForm">
       <h3>批量导入</h3>
