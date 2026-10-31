@@ -59,3 +59,15 @@ test('服务器模式：写接口未登录 401，登录后 200；访客聊天限
     if (backup == null) fs.rmSync(PLAYLIST_FILE, { force: true }); else fs.writeFileSync(PLAYLIST_FILE, backup);
   }
 });
+
+test('转发头只在直连地址受信任时采用，防伪造', async () => {
+  const { clientIp, ipMatches } = await import('../lib/security.mjs');
+  const req = (peer, h = {}) => ({ socket: { remoteAddress: peer }, headers: h });
+  assert.equal(clientIp(req('203.0.113.9', { 'x-forwarded-for': '1.2.3.4' }), {}), '203.0.113.9');
+  assert.equal(clientIp(req('127.0.0.1', { 'x-real-ip': '198.51.100.7', 'x-forwarded-for': '1.2.3.4' }), {}), '198.51.100.7');
+  assert.equal(clientIp(req('::ffff:127.0.0.1', { 'x-forwarded-for': '1.2.3.4, 198.51.100.8' }), {}), '198.51.100.8');
+  assert.equal(clientIp(req('172.24.0.1', { 'x-real-ip': '198.51.100.7' }), {}), '172.24.0.1');
+  assert.equal(clientIp(req('172.24.0.1', { 'x-real-ip': '198.51.100.7' }), { TRUSTED_PROXIES: '172.24.0.1' }), '198.51.100.7');
+  assert.ok(ipMatches('172.24.0.1', '172.16.0.0/12'));
+  assert.ok(!ipMatches('100.76.165.71', '172.16.0.0/12'));
+});

@@ -28,6 +28,12 @@ fi
 mkdir -p runtime/data runtime/cache cache/tts   # cache/tts：预合成语音（不入库，可从已有环境拷贝）
 umask 022
 docker compose -f deploy/docker-compose.yml --env-file .env up -d --build
+# 受信任代理 = compose 网络网关（nginx / tailscale serve 经 Docker 端口转发后显示为该地址）
+GW="$(docker network inspect zhengxin-dh_default --format '{{range .IPAM.Config}}{{.Gateway}}{{end}}' 2>/dev/null || true)"
+if [ -n "$GW" ] && ! grep -q "^TRUSTED_PROXIES=.*$GW" .env; then
+  sed -i '/^TRUSTED_PROXIES=/d' .env && printf 'TRUSTED_PROXIES=127.0.0.1,::1,%s\n' "$GW" >> .env
+  docker compose -f deploy/docker-compose.yml --env-file .env up -d
+fi
 for i in $(seq 1 60); do
   if curl -fsS http://127.0.0.1:43200/api/health >/dev/null 2>&1; then echo "健康检查通过"; break; fi
   sleep 2

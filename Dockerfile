@@ -3,7 +3,7 @@
 FROM node:20-bookworm-slim
 
 ARG EDGE_TTS_VERSION=7.3.1
-ENV NODE_ENV=production PORT=43200 HOST=0.0.0.0 PYTHON=/usr/bin/python3 TRUST_PROXY=1
+ENV NODE_ENV=production PORT=43200 HOST=0.0.0.0 PYTHON=/usr/bin/python3
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends python3 python3-pip ca-certificates curl bzip2 tini \

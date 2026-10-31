@@ -15,7 +15,9 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: "43200"
-      TRUST_PROXY: "1"
+      # 只信这些直连地址带来的 X-Real-IP / X-Forwarded-For。Docker 端口转发后，nginx / tailscale serve 的请求
+      # 在容器里显示为 Docker 网关地址，所以部署脚本会把网关地址写进 .env 的 TRUSTED_PROXIES。
+      TRUSTED_PROXIES: "${TRUSTED_PROXIES:-127.0.0.1,::1}"
     ports:
       - "127.0.0.1:43200:43200"
       - "${TS_BIND_IP:-127.0.0.1}:${TS_BIND_PORT:-43201}:43200"
