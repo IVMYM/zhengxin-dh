@@ -3,10 +3,10 @@
 FROM node:20-bookworm-slim
 
 ARG EDGE_TTS_VERSION=7.3.1
-ENV NODE_ENV=production PORT=43200 HOST=0.0.0.0 PYTHON=/usr/bin/python3
+ENV TZ=Asia/Shanghai NODE_ENV=production PORT=43200 HOST=0.0.0.0 PYTHON=/usr/bin/python3
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends python3 python3-pip ca-certificates curl bzip2 tini \
+ && apt-get install -y --no-install-recommends python3 python3-pip ca-certificates curl bzip2 tini tzdata \
  && pip3 install --no-cache-dir --break-system-packages "edge-tts==${EDGE_TTS_VERSION}" \
  && python3 -c "import edge_tts" \
  && apt-get purge -y python3-pip && apt-get autoremove -y && rm -rf /var/lib/apt/lists/* /root/.cache

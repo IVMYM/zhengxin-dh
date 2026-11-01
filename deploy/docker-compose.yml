@@ -13,6 +13,7 @@ services:
     env_file:
       - ../.env            # LLM_*、ADMIN_PASSWORD 等（chmod 600，不入库、不进镜像）
     environment:
+      TZ: Asia/Shanghai          # 只影响日志时间；回答里的日期一律按北京时间计算，与此无关
       HOST: 0.0.0.0
       PORT: "43200"
       # 只信这些直连地址带来的 X-Real-IP / X-Forwarded-For。Docker 端口转发后，nginx / tailscale serve 的请求
