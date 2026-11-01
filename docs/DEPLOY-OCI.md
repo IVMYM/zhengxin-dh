@@ -34,7 +34,8 @@ bash deploy/server-up.sh
 
 - 设置 `ADMIN_PASSWORD` 后，播放单的所有写操作（增删改、排序、导入、合成、播放控制）都需先在控制面板登录；登录态是 12 小时的 HttpOnly + SameSite=Strict 签名 Cookie。展厅屏只可汇报「当前条目播完」。
 - 限流（每个 IP、每分钟）：对话 `RATE_CHAT_PER_MIN`（默认 30），语音合成未命中缓存 `RATE_TTS_PER_MIN`（默认 120），登录 10 次 / 10 分钟。
-- 经 Docker 端口转发后，容器看到的来源地址可能是网关地址，此时限流相当于全局限流；放在反向代理后面时设置 `TRUST_PROXY=1`（镜像默认）并让代理传 `X-Forwarded-For`。
+- 只有直连地址在 `TRUSTED_PROXIES` 里（默认 127.0.0.1、::1；Docker 部署时为 compose 网络网关）时，才采用代理传来的 `X-Real-IP` / `X-Forwarded-For` 最右一项，其他来源自带的转发头一律忽略，防止伪造绕过限流。
+- 对公网开放后，建议去掉 Tailscale 地址上的直连端口（`.env` 设 `TS_BIND_IP=127.0.0.1`、`TS_BIND_PORT=43201`），tailnet 内改用 `tailscale serve` 的 HTTPS 地址；否则经 Docker 转发的直连请求也显示为网关地址，可伪造来源头。
 
 ## HTTPS 与麦克风
 
