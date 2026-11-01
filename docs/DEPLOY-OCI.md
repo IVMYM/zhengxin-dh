@@ -19,6 +19,7 @@
 git clone https://github.com/IVMYM/zhengxin-dh.git ~/zhengxin-dh
 cd ~/zhengxin-dh
 # 1) 把 LLM_BASE_URL / LLM_API_KEY / LLM_MODEL 写进 .env（chmod 600，不要回显）
+#    要轮询多个模型时再加 AMD_API_KEY 与 LLM_MODELS（见 .env.example；AMD 免费模型仅开发/测试）
 # 2) 可选：拷入已有的 cache/tts 与 runtime/data/playlist.json
 bash deploy/server-up.sh
 ```

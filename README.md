@@ -42,7 +42,7 @@
 
 - 🧍 **写实全身数字人**：1080×1920 竖屏设计，横屏/普通窗口自动等比缩放；25 套服装可轻触或语音切换（“换一套”“换成旗袍”）。
 - 🎙️ **离线语音识别**：sherpa-onnx WebAssembly 在浏览器本机识别，录音不出本机；支持“你好 / 小信”语音唤醒。
-- 💬 **知识库优先的问答**：内置征信知识库与意图路由，**断网可用**；可选接入任意 OpenAI 兼容大模型（流式逐句播报，超时自动回落知识库）。
+- 💬 **知识库优先的问答**：内置征信知识库与意图路由，**断网可用**；可选接入一个或多个 OpenAI 兼容大模型（流式逐句播报；多个模型轮流使用，超时、限流或服务异常时换下一个，全部失败再回落知识库）。
 - 🔊 **神经网络语音**：edge-tts 女声（晓晓 / 晓伊），逐词时间戳驱动字幕与口型；常用话术预合成缓存，断网也能播。
 - 👄 **声画同步**：按“此刻听到的声音”驱动嘴型，句首句尾静音不动嘴；可选门控说话循环、MuseTalk 预渲染口型视频。
 - 📋 **话术播单**：像音乐播放器一样管理固定话术（顺序/列表循环/单曲循环/随机、拖拽排序、批量合成），电脑或手机遥控展厅屏。
@@ -66,7 +66,7 @@ flowchart LR
   end
   subgraph Server["Node 服务 server.mjs（零依赖）"]
     BRAIN["brain.mjs<br/>意图路由 · 知识库 · 脱敏"]
-    LLM["llm.mjs<br/>OpenAI 兼容流式"]
+    LLM["llm.mjs<br/>OpenAI 兼容流式 · 多模型轮询"]
     TTS["tts.mjs<br/>edge-tts + 缓存"]
     PL["playlist.mjs<br/>播单 · SSE 广播"]
     LIP["lipsync.mjs<br/>口型视频缓存"]
@@ -108,12 +108,12 @@ npm start                   # 或 npm run dev（修改服务端代码自动重�
 
 | 位置 | 说明 |
 |---|---|
-| `.env`（从 `.env.example` 复制，**不入库**） | 大模型地址/密钥/模型名、默认音色、端口等，环境变量优先 |
+| `.env`（从 `.env.example` 复制，**不入库**） | 大模型地址/密钥/模型名，或多模型轮询列表 `LLM_MODELS`、默认音色、端口等，环境变量优先 |
 | `config/site.json` | 展厅名称、副标题、行名 `bank`、热线、`showText`（是否显示文字）、`mouthMode`（`loop`/`gate`）、`attractAfterSec` |
 | `config/outfits.json` | 服装清单（`id`、名称、待机/说话视频、关键词、口型头像 id、`sensitive`） |
 | `lib/kb.mjs` | 知识库：关键词、口播文本、要点卡片、推荐问题、自助查询流程 |
 
-大模型示例（占位符）：
+大模型示例（占位符）。只填这三项时，行为与原来完全一致：
 
 ```bash
 LLM_BASE_URL=https://your-llm-host.example.com/v1
@@ -121,7 +121,16 @@ LLM_API_KEY=your-api-key-here
 LLM_MODEL=your-model-name
 ```
 
-策略是**知识库优先**：知识库有把握的问题按审定口径回答，保证合规；开放问题才交给大模型，并附上相关知识条目作参考。首句到达前会先说“好的，我想一想”，模型思考内容不朗读。`/api/health` 可查看是否已接入大模型。
+多个模型轮流使用时，在 `.env` 增加下面两行（一行 JSON；密钥只写在环境变量里，用 `apiKeyEnv` 引用）。设置了 `LLM_MODELS` 后以列表为准。每次请求从健康目标里轮流选一个；某个目标返回 HTTP 429/5xx、连不上，或 `LLM_FIRST_MS` 内没有首字，就把它冷却一小会儿（响应头有 `Retry-After` 则照做，否则约 60 秒）并立刻换下一个，全部失败才回落知识库。日志只打模型名和主机，不打密钥。IFM/K2 的多轮 `reasoning_content` 只加在该接口上。
+
+AMD Token Factory 的免费模型**只用于开发/测试**：`https://developer.amd.com.cn/radeon/api/v1`（OpenAI 兼容，支持工具和流式），同一账号大约 20 次/分钟，模型有时会返回 429 `model_concurrency_rate_limit_exceeded`。
+
+```bash
+AMD_API_KEY=your-amd-api-key
+LLM_MODELS=[{"baseUrl":"https://api.ifm.ai/v1","apiKeyEnv":"LLM_API_KEY","model":"IFM/K2-Horizon-375B-A23B","extra":{"reasoning_effort":"low"}},{"baseUrl":"https://developer.amd.com.cn/radeon/api/v1","apiKeyEnv":"AMD_API_KEY","model":"DeepSeek-V4-Flash","extra":{}},{"baseUrl":"https://developer.amd.com.cn/radeon/api/v1","apiKeyEnv":"AMD_API_KEY","model":"DeepSeek-V4.1-Flash","extra":{}},{"baseUrl":"https://developer.amd.com.cn/radeon/api/v1","apiKeyEnv":"AMD_API_KEY","model":"MiMo-V2.6-Flash","extra":{}},{"baseUrl":"https://developer.amd.com.cn/radeon/api/v1","apiKeyEnv":"AMD_API_KEY","model":"Qwen3.8-Flash-Next","extra":{}},{"baseUrl":"https://developer.amd.com.cn/radeon/api/v1","apiKeyEnv":"AMD_API_KEY","model":"GLM-5.3-Flash","extra":{}}]
+```
+
+策略是**知识库优先**：知识库有把握的问题按审定口径回答，保证合规；开放问题才交给大模型，并附上相关知识条目作参考。首句到达前会先说“好的，我想一想”，模型思考内容不朗读。`/api/health` 可查看是否已接入大模型（轮询时 `llm` 为逗号分隔的模型名）。
 
 常用 URL 参数：`?kiosk=1` 隐藏鼠标、`?voice=female2` 晓伊、`?text=1|0` 显示/隐藏文字、`?mouth=gate` 门控口型、`?outfit=<id>` 指定服装、`?wake=0` 关闭唤醒、`?asr=webspeech|off` 切换识别。
 
@@ -194,7 +203,7 @@ kiosk 脚本以独立配置目录启动全屏 Chrome，并允许自动播放与�
 │   ├── kb.mjs              # 征信知识库与话术
 │   ├── router.mjs          # 意图路由（含离线识别同音误字纠正）
 │   ├── brain.mjs           # 问答主流程、敏感信息脱敏
-│   ├── llm.mjs             # OpenAI 兼容流式大模型、句子切分
+│   ├── llm.mjs             # OpenAI 兼容流式大模型、多模型轮询、句子切分
 │   ├── tts.mjs             # edge-tts 合成、缓存、音色
 │   ├── playlist.mjs        # 话术播单存储、播放顺序、批量合成、SSE
 │   ├── lipsync.mjs         # MuseTalk 口型视频缓存与调用

@@ -418,8 +418,10 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, HOST, () => {
   const cfg = llmConfig();
+  const llmLine = !cfg.enabled ? '未配置（使用本地知识库作答）'
+    : (cfg.targets.length > 1 ? `轮询 ${cfg.targets.length} 个：${cfg.targets.map((t) => t.model).join('、')}` : cfg.model);
   console.log(`征信服务数字人已启动： http://localhost:${PORT}`);
-  console.log(`大模型：${cfg.enabled ? cfg.model : '未配置（使用本地知识库作答）'}`);
+  console.log(`大模型：${llmLine}`);
   console.log(`管理端密码：${adminRequired() ? '已启用' : '未设置（本机模式，不需要登录）'}`);
   warmTts().catch(() => {});
   resynthMigratedVoices().catch((e) => console.warn('[playlist] 重新合成失败', e.message || e));
