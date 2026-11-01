@@ -66,8 +66,8 @@ test('转发头只在直连地址受信任时采用，防伪造', async () => {
   assert.equal(clientIp(req('203.0.113.9', { 'x-forwarded-for': '1.2.3.4' }), {}), '203.0.113.9');
   assert.equal(clientIp(req('127.0.0.1', { 'x-real-ip': '198.51.100.7', 'x-forwarded-for': '1.2.3.4' }), {}), '198.51.100.7');
   assert.equal(clientIp(req('::ffff:127.0.0.1', { 'x-forwarded-for': '1.2.3.4, 198.51.100.8' }), {}), '198.51.100.8');
-  assert.equal(clientIp(req('172.24.0.1', { 'x-real-ip': '198.51.100.7' }), {}), '172.24.0.1');
-  assert.equal(clientIp(req('172.24.0.1', { 'x-real-ip': '198.51.100.7' }), { TRUSTED_PROXIES: '172.24.0.1' }), '198.51.100.7');
-  assert.ok(ipMatches('172.24.0.1', '172.16.0.0/12'));
-  assert.ok(!ipMatches('100.76.165.71', '172.16.0.0/12'));
+  assert.equal(clientIp(req('172.18.0.1', { 'x-real-ip': '198.51.100.7' }), {}), '172.18.0.1');
+  assert.equal(clientIp(req('172.18.0.1', { 'x-real-ip': '198.51.100.7' }), { TRUSTED_PROXIES: '172.18.0.1' }), '198.51.100.7');
+  assert.ok(ipMatches('172.18.0.1', '172.16.0.0/12'));
+  assert.ok(!ipMatches('100.64.0.10', '172.16.0.0/12'));
 });
