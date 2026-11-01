@@ -1,0 +1,10 @@
+{
+  "_说明": "网点信息（数字人 branch_info 工具读取）。复制为 data/branch.json 后修改；留空的字段数字人会说“以网点公示为准”。",
+  "name": "",
+  "city": "",
+  "address": "",
+  "phone": "",
+  "hours": { "weekday": "", "weekend": "", "holiday": "" },
+  "services": ["个人信用报告查询（柜台、自助查询机）", "企业信用报告查询", "征信异议申请受理"],
+  "notes": ""
+}
