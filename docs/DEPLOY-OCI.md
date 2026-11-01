@@ -46,7 +46,9 @@ sudo tailscale serve --bg --https=10443 http://127.0.0.1:43200
 # 访问 https://<机器名>.<tailnet>.ts.net:10443
 ```
 
-对公网开放需另行决定域名，并用 nginx（或 Caddy）配置 HTTPS 反向代理到 `127.0.0.1:43200`，同时放通防火墙 / 安全列表端口。
+对公网开放：用 `deploy/nginx/zhengxin-dh.conf.template` 配 nginx HTTPS 反向代理到 `127.0.0.1:43200`（支持 SSE），certbot webroot 申请证书，`nginx -t` 后 `systemctl reload nginx`。
+
+当前 OCI 实例：`https://dighum.liuyuan.kdns.fr`。该机 443 由 `/etc/nginx/stream.d/sing-box-sni.conf` 按 SNI 分流，本站走本地 TLS 后端 `127.0.0.1:9460`（模板 B 布局）；证书 `/etc/letsencrypt/live/dighum.liuyuan.kdns.fr`，由 certbot.timer 自动续期，续期后 reload nginx。
 
 ## 运维
 
