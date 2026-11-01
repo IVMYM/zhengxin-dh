@@ -9,6 +9,7 @@ services:
     image: zhengxin-dh:local
     container_name: zhengxin-dh
     restart: unless-stopped
+    user: "${APP_UID:-1000}:${APP_GID:-1000}"   # 与宿主 runtime/ 目录属主一致
     env_file:
       - ../.env            # LLM_*、ADMIN_PASSWORD 等（chmod 600，不入库、不进镜像）
     environment:
