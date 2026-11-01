@@ -1255,6 +1255,19 @@
       if (!zone.classList.contains('show')) { e.preventDefault(); e.stopPropagation(); MicPower.show(6000); MicPower.render(); }
     }, true);
     btn.addEventListener('click', (e) => { e.stopPropagation(); touch(); MicPower.click(); });
+    // 文字模式：字幕显示时把按钮区抬到字幕条上方（按字幕实际高度），避免「正在回答·点此打断」压住字幕
+    const stage = $('#stage'); const sub = $('#subtitle');
+    if (stage && sub) {
+      const syncSubClear = () => {
+        const on = S.showText && sub.classList.contains('show');
+        const gap = on ? sub.offsetHeight + (parseFloat(getComputedStyle(sub).bottom) || 0) : 0;
+        stage.style.setProperty('--sub-clear', gap + 'px');
+        zone.classList.toggle('above-sub', on);
+      };
+      new MutationObserver(syncSubClear).observe(sub, { attributes: true, attributeFilter: ['class'] });
+      if (window.ResizeObserver) new ResizeObserver(syncSubClear).observe(sub);
+      syncSubClear();
+    }
   })();
   $('#attract').addEventListener('click', (e) => {
     const q = e.target.closest('[data-q]');

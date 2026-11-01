@@ -268,6 +268,9 @@ button, input, select { font-family: inherit; }
 .mic-power[data-state=thinking] { background: #173c5e; color: #fff; border-color: #173c5e; }
 .mic-power[data-state=speaking] { opacity: .85; }
 .mic-power[data-state=warn] { color: #8a5d14; background: #fdf8ee; border-color: #e8d2a8; }
+/* 文字模式下字幕显示时，按钮整体挪到字幕条上方，永不遮字幕（--sub-clear 由 app.js 按字幕实际高度设置） */
+.mic-power-zone { transition: bottom .22s ease; }
+#app .stage .mic-power-zone.above-sub { bottom: var(--sub-clear, 0px); padding-bottom: 26px; }
 #app.no-text .mic-power-zone { display: flex; }
 #app.no-text .mic-hint { display: block; }
 #app .cue { display: none !important; }
