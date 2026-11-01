@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { streamLlm, META_TALK } from '../lib/llm.mjs';
-import { runTool, loadBranch, _weather, TOOL_DEFS } from '../lib/tools.mjs';
+import { runTool, loadBranch, _weather, TOOL_DEFS, prefetchTools } from '../lib/tools.mjs';
 import { answerStream } from '../lib/brain.mjs';
 
 /** 假的 OpenAI 兼容服务：按脚本逐次返回 SSE（工具调用或正文）或错误码 */
@@ -114,6 +114,47 @@ test('网点信息：占位/空值不编造', async () => {
 test('天气：解析 Open-Meteo 数据并给出口径', async () => {
   const j = { current: { temperature_2m: 15.4, weather_code: 3 }, daily: { time: ['2026-11-01', '2026-11-02', '2026-11-03'], weather_code: [61, 0, 2], temperature_2m_max: [17.2, 20, 19], temperature_2m_min: [12.1, 11, 10], precipitation_probability_max: [80, 5, 10] } };
   const out = await _weather({ city: '测试市', day: 'tomorrow' }, async () => j);
-  assert.equal(out.data.weather, '晴');
+  assert.equal(out.data.days[1].weather, '晴');
+  assert.equal(out.data.days[0].weather, '小雨');
   assert.equal(out.say, '测试明天晴，11到20度，降水概率5%。');
+});
+
+test('意图预取：天气/网点问题先查好；天气追问沿用上一轮', async () => {
+  const run = async (name, args) => ({ ok: true, data: { name, args }, say: '', ms: 0 });
+  assert.deepEqual((await prefetchTools('明天会下雨吗', [], run)).map((x) => [x.name, x.args.day]), [['get_weather', 'tomorrow']]);
+  assert.deepEqual((await prefetchTools('网点几点下班', [], run)).map((x) => x.name), ['branch_info']);
+  assert.deepEqual((await prefetchTools('那后天呢', [{ role: 'user', content: '明天会下雨吗' }, { role: 'assistant', content: '不会' }], run)).map((x) => [x.name, x.args.day]), [['get_weather', 'day_after']]);
+  assert.deepEqual(await prefetchTools('那后天呢', [{ role: 'user', content: '怎么查征信' }], run), []);
+  assert.deepEqual(await prefetchTools('你好呀', [], run), []);
+});
+
+test('预取结果写进对话：模型一轮作答，不再请求工具', async () => {
+  const m = await mockLlm([{ text: '贵阳今天阵雨，十三到十九度，记得带伞。' }]);
+  try {
+    const pre = [{ name: 'get_weather', args: { day: 'today' }, out: { ok: true, data: { city: '贵阳', days: [{ day: '今天', weather: '阵雨' }] }, say: '贵阳今天阵雨。', ms: 0 } }];
+    const out = await streamLlm('今天天气怎么样', [], [], m.cfg, () => {}, { tools: TOOL_DEFS, runTool: fakeTool([]), prefetched: pre });
+    assert.equal(m.seen.length, 1);
+    const msgs = m.seen[0].messages;
+    assert.equal(msgs.at(-1).role, 'tool');
+    assert.match(msgs.at(-1).content, /阵雨/);
+    assert.equal(out.tools[0].prefetched, true);
+  } finally { m.close(); }
+});
+
+test('只说“我查一下”就没下文：丢弃该句，用预取口径兜底', async () => {
+  const m = await mockLlm([{ text: '我先帮您查一下今天的天气。' }]);
+  try {
+    const pre = [{ name: 'get_weather', args: {}, out: { ok: true, data: {}, say: '贵阳今天阵雨，13到19度。', ms: 0 } }];
+    const out = await streamLlm('今天天气', [], [], m.cfg, () => {}, { tools: TOOL_DEFS, runTool: fakeTool([]), prefetched: pre });
+    assert.equal(out.speech, '贵阳今天阵雨，13到19度。');
+  } finally { m.close(); }
+});
+
+test('天气问题里的城市名', async () => {
+  const { cityFromQuestion } = await import('../lib/tools.mjs');
+  assert.equal(cityFromQuestion('贵阳今天天气怎么样'), '贵阳');
+  assert.equal(cityFromQuestion('请问北京市明天会下雨吗'), '北京');
+  assert.equal(cityFromQuestion('本地今天天气怎么样'), '');
+  assert.equal(cityFromQuestion('明天会下雨吗'), '');
+  assert.equal(cityFromQuestion('今天天气'), '');
 });
