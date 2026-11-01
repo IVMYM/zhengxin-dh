@@ -59,3 +59,16 @@ git pull && bash deploy/server-up.sh      # 升级
 ```
 
 开机时如果 Docker 先于 Tailscale 启动，绑定 Tailscale 地址可能失败；`restart: unless-stopped` 会自动重试，必要时执行一次 `docker start zhengxin-dh`。
+
+## 智能体工具（大模型自动调用）
+
+| 工具 | 作用 | 数据来源 |
+|---|---|---|
+| `get_time` | 北京时间、星期、本周与未来 7 天日期 | 本地计算 |
+| `get_weather` | 今天/明天/后天天气 | Open-Meteo（免密钥），默认城市预热、10 分钟缓存 |
+| `branch_info` | 网点名称、地址、电话、营业时间、可办业务 | `data/branch.json`（服务器上为 `runtime/data/branch.json`），模板 `config/branch.example.json`；留空的项回答“以网点公示为准” |
+| `search_knowledge` | 征信审定口径 | 内置知识库 |
+
+- 天气、网点信息类问题先按关键词预取再交给模型（一次往返）；其余由模型通过原生 `tools` 决定，最多 2 轮。任一环节失败回落知识库或工具自带口径。
+- 环境变量：`WEATHER_CITY`（覆盖网点城市）、`AGENT_TOOLS=0`（关闭工具）、`TOOL_TIMEOUT_MS`（默认 3000）。
+- 改 `branch.json` 后无需重启。
