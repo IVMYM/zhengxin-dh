@@ -116,6 +116,7 @@ test('天气：解析 Open-Meteo 数据并给出口径', async () => {
   const out = await _weather({ city: '测试市', day: 'tomorrow' }, async () => j);
   assert.equal(out.data.days[1].weather, '晴');
   assert.equal(out.data.days[0].weather, '小雨');
+  assert.equal(out.data.days[0].summary, '今天小雨，12到17度，降水概率80%');
   assert.equal(out.say, '测试明天晴，11到20度，降水概率5%。');
 });
 
