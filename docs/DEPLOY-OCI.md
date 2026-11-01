@@ -68,7 +68,7 @@ git pull && bash deploy/server-up.sh      # 升级
 | `get_weather` | 今天/明天/后天天气 | Open-Meteo（免密钥），默认城市预热、10 分钟缓存 |
 | `branch_info` | 网点名称、地址、电话、营业时间、可办业务 | `data/branch.json`（服务器上为 `runtime/data/branch.json`），模板 `config/branch.example.json`；留空的项回答“以网点公示为准” |
 | `search_knowledge` | 征信审定口径 | 内置知识库 |
-| `web_search` | 新闻、近期事件、知识库以外的常识（征信、天气、网点及荐股/政治/医疗/征信修复等不搜） | Tavily（`TAVILY_API_KEY`，只在服务端 `.env`）；10 分钟缓存；每日上限 `WEB_SEARCH_DAILY_LIMIT`（默认 30，计数在 `data/websearch-usage.json`）；超时 `WEB_SEARCH_TIMEOUT_MS`（默认 3500） |
+| `web_search` | 新闻、近期事件、知识库以外的常识（征信、天气、网点及荐股/政治/医疗/征信修复等不搜） | Tavily（`TAVILY_API_KEY`，只在服务端 `.env`）；10 分钟缓存；每日上限 `WEB_SEARCH_DAILY_LIMIT`（默认 30，计数在 `data/websearch-usage.json`）；超时 `WEB_SEARCH_TIMEOUT_MS`（默认 5000）；新闻、近期事件类问题按关键词先搜再答 |
 
 - 天气、网点信息类问题先按关键词预取再交给模型（一次往返）；其余由模型通过原生 `tools` 决定，最多 2 轮。任一环节失败回落知识库或工具自带口径。
 - 环境变量：`WEATHER_CITY`（覆盖网点城市）、`AGENT_TOOLS=0`（关闭工具）、`TOOL_TIMEOUT_MS`（默认 3000）。

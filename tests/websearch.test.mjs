@@ -91,3 +91,40 @@ test('垫话之后大模型失败：补一句“没查到”，不回落成别�
     assert.match(out.speech, /没查到可靠信息/);
   } finally { m.close(); }
 });
+
+test('没联网却说“据网上公开信息”的句子被丢弃；近似重复句被丢弃', async () => {
+  const m = await mockLlm([{ text: '据网上公开信息，今年诺贝尔文学奖得主是某某。这个建议以官方发布为准。' }]);
+  try {
+    const out = await streamLlm('今年诺贝尔文学奖是谁', [], [], m.cfg, () => {}, {});
+    assert.equal(out.speech, '这个建议以官方发布为准。');
+  } finally { m.close(); }
+  const m2 = await mockLlm([{ text: '今天合肥小雨，14到20度，出门记得带伞。今天小雨，14到20度，出门记得带伞。' }]);
+  try {
+    const out = await streamLlm('今天天气', [], [], m2.cfg, () => {}, {});
+    assert.equal(out.speech, '今天合肥小雨，14到20度，出门记得带伞。');
+  } finally { m2.close(); }
+});
+
+test('新闻类问题预取联网搜索并先说垫话；征信/荐股不预取', async () => {
+  const { prefetchTools } = await import('../lib/tools.mjs');
+  const env = { TAVILY_API_KEY: 'k' };
+  const run = async (name, args) => ({ ok: true, data: { args }, say: '', ms: 0 });
+  const slow = [];
+  const p = await prefetchTools('合肥最近有什么新闻？', [], run, { env, onSlow: (f) => slow.push(f) });
+  assert.deepEqual(p.map((x) => [x.name, x.args.query]), [['web_search', '合肥最近有什么新闻']]);
+  assert.equal(slow.length, 1);
+  assert.deepEqual(await prefetchTools('最近股票推荐哪只', [], run, { env }), []);
+  assert.deepEqual(await prefetchTools('今年诺贝尔文学奖是谁', [], run, { env: {} }), []);
+});
+
+test('预取的联网搜索失败：直接说没查到，不调大模型', async () => {
+  const m = await mockLlm([{ text: '不该被调用。' }]);
+  const sent = [];
+  try {
+    const pre = [{ name: 'web_search', args: { query: 'x' }, out: { ok: false, data: { error: 'timeout' }, say: '这个我暂时没查到可靠信息，建议以官方渠道发布为准。' } }];
+    const out = await streamLlm('合肥最近新闻', [], [], m.cfg, (s) => sent.push(s), { tools: defs, runTool: async () => ({}), prefetched: pre, preFiller: '我帮您查一下网上的公开信息。' });
+    assert.equal(m.seen.length, 0);
+    assert.deepEqual(sent, ['这个我暂时没查到可靠信息，建议以官方渠道发布为准。']);
+    assert.match(out.speech, /^我帮您查一下网上的公开信息。这个我暂时没查到/);
+  } finally { m.close(); }
+});
