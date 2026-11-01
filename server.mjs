@@ -14,6 +14,7 @@ import {
   parseImport, synthesizePlaylist, synthStatus, subscribe, broadcast, clientCount, refreshSynthStatus,
   MODE_LABEL, MODES,
 } from './lib/playlist.mjs';
+import { adminRequired, isAdmin, checkPassword, sessionCookie, clearCookie, clientIp, RateLimiter, LIMITS } from './lib/security.mjs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 
@@ -80,6 +81,19 @@ function serveFile(req, res, file) {
   });
 }
 
+const limiter = new RateLimiter();
+/** 公共接口限流：超限返回 429（只对真正消耗资源的请求计数，如未命中缓存的合成） */
+function limited(req, res, kind) {
+  const r = limiter.hit(`${kind}:${clientIp(req)}`, LIMITS[kind](), 60000);
+  if (r.ok) return false;
+  res.writeHead(429, { 'content-type': MIME['.json'], 'cache-control': 'no-store', 'retry-after': String(r.retryAfter) });
+  res.end(JSON.stringify({ error: 'too many requests', retryAfter: r.retryAfter }));
+  return true;
+}
+
+// 需要管理员登录的写接口（设置了 ADMIN_PASSWORD 时）。展厅屏汇报“播完”的 control:ended 不需要。
+const ADMIN_WRITE = new Set(['PUT /api/playlist', 'POST /api/playlist/item', 'DELETE /api/playlist/item', 'POST /api/playlist/reorder', 'POST /api/playlist/import', 'POST /api/playlist/synth', 'POST /api/playlist/control']);
+
 async function handleTts(req, res, url) {
   const text = speakable((url.searchParams.get('text') || '').slice(0, 600));
   if (!text) return sendJson(res, 400, { error: 'empty text' });
@@ -95,6 +109,7 @@ async function handleTts(req, res, url) {
     if (hit) return serveFile(req, res, hit);
   }
 
+  if (limited(req, res, 'tts')) return;
   const child = synthesize(voice, text);
   let started = false;
   // 实时合成失败（未安装 edge-tts、断网、超时）时，改用同一句话其他音色的缓存；都没有才返回错误，由浏览器朗读兜底
@@ -149,12 +164,41 @@ const server = http.createServer(async (req, res) => {
         outfits: loadOutfits(),
       });
     }
+    // ---------- 管理端登录 ----------
+    if (url.pathname === '/api/admin/status') {
+      return sendJson(res, 200, { required: adminRequired(), authed: isAdmin(req) });
+    }
+    if (url.pathname === '/api/admin/login' && req.method === 'POST') {
+      const lim = limiter.hit(`login:${clientIp(req)}`, LIMITS.login(), 10 * 60000);
+      if (!lim.ok) return sendJson(res, 429, { error: 'too many attempts', retryAfter: lim.retryAfter });
+      const body = JSON.parse((await readBody(req, 4096)) || '{}');
+      if (!adminRequired()) return sendJson(res, 200, { ok: true, required: false });
+      if (!checkPassword(body.password)) return sendJson(res, 401, { error: 'wrong password' });
+      res.writeHead(200, { 'content-type': MIME['.json'], 'cache-control': 'no-store', 'set-cookie': sessionCookie(req) });
+      return res.end(JSON.stringify({ ok: true }));
+    }
+    if (url.pathname === '/api/admin/logout' && req.method === 'POST') {
+      res.writeHead(200, { 'content-type': MIME['.json'], 'cache-control': 'no-store', 'set-cookie': clearCookie(req) });
+      return res.end(JSON.stringify({ ok: true }));
+    }
+    if (ADMIN_WRITE.has(`${req.method} ${url.pathname}`) && !isAdmin(req)) {
+      let kioskEnded = false;
+      if (url.pathname === '/api/playlist/control') {
+        // 展厅屏（访客端）只允许汇报“当前这条播完了”，其余控制需要登录
+        const raw = await readBody(req, 4096);
+        try { kioskEnded = JSON.parse(raw || '{}').action === 'ended' && Object.keys(JSON.parse(raw || '{}')).length === 1; } catch {}
+        req.__body = raw;
+      }
+      if (!kioskEnded) return sendJson(res, 401, { error: 'admin login required' });
+    }
     if (url.pathname === '/api/chat' && req.method === 'POST') {
+      if (limited(req, res, 'chat')) return;
       const body = JSON.parse((await readBody(req)) || '{}');
       const out = await answer(String(body.text || '').slice(0, 300), { flow: Boolean(body.flow), history: Array.isArray(body.history) ? body.history : [] });
       return sendJson(res, 200, out);
     }
     if (url.pathname === '/api/chat/stream' && req.method === 'POST') {
+      if (limited(req, res, 'chat')) return;
       // 流式问答（NDJSON）：meta → sentence…（大模型逐句）→ done
       const body = JSON.parse((await readBody(req)) || '{}');
       res.writeHead(200, { 'content-type': 'application/x-ndjson; charset=utf-8', 'cache-control': 'no-store', 'x-accel-buffering': 'no' });
@@ -273,7 +317,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, synthStatus());
     }
     if (url.pathname === '/api/playlist/control' && req.method === 'POST') {
-      const body = JSON.parse((await readBody(req)) || '{}');
+      const body = JSON.parse((req.__body !== undefined ? req.__body : await readBody(req)) || '{}');
       const store = loadStore();
       const action = String(body.action || '');
       const pl = getPlaylist(store, body.playlistId || store.player.playlistId || store.activeId);
@@ -347,7 +391,10 @@ const server = http.createServer(async (req, res) => {
       const voice = resolveVoice(url.searchParams.get('voice'));
       if (!text) return sendJson(res, 400, { error: 'empty text' });
       if (cachedFile(voice, text)) return sendJson(res, 200, { state: 'cached' });
-      if (!pendingSynthesis(voice, text)) { const c = synthesize(voice, text); c.stdout.resume(); }
+      if (!pendingSynthesis(voice, text)) {
+        if (limited(req, res, 'tts')) return;
+        const c = synthesize(voice, text); c.stdout.resume();
+      }
       return sendJson(res, 200, { state: 'started' });
     }
     if (url.pathname === '/api/tts/meta') {
@@ -372,7 +419,8 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, HOST, () => {
   const cfg = llmConfig();
   console.log(`征信服务数字人已启动： http://localhost:${PORT}`);
-  console.log(`大模型：${cfg.enabled ? cfg.model + ' @ ' + cfg.baseUrl : '未配置（使用本地知识库作答）'}`);
+  console.log(`大模型：${cfg.enabled ? cfg.model : '未配置（使用本地知识库作答）'}`);
+  console.log(`管理端密码：${adminRequired() ? '已启用' : '未设置（本机模式，不需要登录）'}`);
   warmTts().catch(() => {});
   resynthMigratedVoices().catch((e) => console.warn('[playlist] 重新合成失败', e.message || e));
 });

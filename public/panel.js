@@ -14,10 +14,33 @@
   const items = () => pl()?.items || [];
   const cur = () => items().find((i) => i.id === store?.player?.currentId) || null;
 
-  async function api(path, opts) {
-    const r = await fetch(path, { headers: { 'content-type': 'application/json' }, ...opts });
+  // 服务器部署时写操作需要管理员登录：收到 401 弹出登录框，登录成功后自动重试一次
+  let loginWait = null;
+  function askLogin() {
+    if (loginWait) return loginWait;
+    loginWait = new Promise((resolve) => {
+      const dlg = $('#loginDlg'); const err = $('#loginErr'); const pw = $('#loginPw');
+      if (!dlg) { resolve(false); return; }
+      err.hidden = true; pw.value = '';
+      const done = (ok) => { dlg.close(); loginWait = null; resolve(ok); };
+      $('#loginCancel').onclick = () => done(false);
+      $('#loginForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const r = await fetch('/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: pw.value }) });
+        if (r.ok) { pw.value = ''; done(true); return; }
+        const j = await r.json().catch(() => ({}));
+        err.textContent = r.status === 429 ? `尝试次数过多，请 ${j.retryAfter || 60} 秒后再试` : '密码不正确';
+        err.hidden = false; pw.select();
+      };
+      dlg.showModal(); pw.focus();
+    });
+    return loginWait;
+  }
+  async function api(path, opts, retried) {
+    const r = await fetch(path, { headers: { 'content-type': 'application/json' }, credentials: 'same-origin', ...opts });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(j.error || r.statusText);
+    if (r.status === 401 && !retried && await askLogin()) return api(path, opts, true);
+    if (!r.ok) throw new Error(r.status === 401 ? '需要管理员登录' : r.status === 429 ? '操作太频繁，请稍后再试' : (j.error || r.statusText));
     return j;
   }
 
