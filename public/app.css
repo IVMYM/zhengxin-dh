@@ -42,6 +42,52 @@ button, input, select { font-family: inherit; }
 #app.no-text .avatar canvas#vFade { object-position: 50% 50%; }
 .avatar canvas#vFade.show { opacity: 1; }
 .avatar canvas#vFade.fading { opacity: 0; transition: opacity .45s ease; }
+.avatar canvas#vFade.fading.out-l { transform: translateX(-7%); transition: opacity .5s ease, transform .5s cubic-bezier(.3,.6,.2,1); }
+.avatar canvas#vFade.fading.out-r { transform: translateX(7%); transition: opacity .5s ease, transform .5s cubic-bezier(.3,.6,.2,1); }
+/* 拖动跟手：只用 translate 属性，不影响 .avatar 原有的 transform（右侧卡片让位） */
+.avatar { translate: var(--drag, 0px) 0; transition: transform .7s cubic-bezier(.2,.7,.2,1), translate .38s cubic-bezier(.2,.8,.2,1), scale .38s cubic-bezier(.2,.8,.2,1); }
+/* 拖动时人物微微放大，跟手位移不露出画面边缘 */
+.avatar.dragging { scale: 1.06; transition: transform .7s cubic-bezier(.2,.7,.2,1), translate 0s, scale .2s ease; }
+.stage { touch-action: pan-y; }
+
+/* ---------- 左右换装箭头：白色磨砂玻璃 ---------- */
+.outfit-nav { position: absolute; inset: 0; z-index: 7; pointer-events: none; transition: opacity .3s ease; }
+.outfit-nav[hidden] { display: none; }
+.outfit-arrow {
+  position: absolute; top: 50%; --sz: calc(96px * var(--tap-k, 1)); width: var(--sz); height: var(--sz); margin-top: calc(var(--sz) / -2); padding: 0;
+  display: flex; align-items: center; justify-content: center; pointer-events: auto;
+  border-radius: 50%; border: 1px solid rgba(255,255,255,.75);
+  background: linear-gradient(150deg, rgba(255,255,255,.62), rgba(255,255,255,.28));
+  -webkit-backdrop-filter: blur(14px) saturate(1.5); backdrop-filter: blur(14px) saturate(1.5);
+  box-shadow: 0 10px 28px rgba(28,46,66,.16), 0 1px 2px rgba(28,46,66,.10), inset 0 1px 0 rgba(255,255,255,.9), inset 0 -1px 0 rgba(31,78,121,.06);
+  color: #1f3b57; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: transform .18s ease, background .2s ease, box-shadow .2s ease, opacity .3s ease;
+}
+.outfit-arrow svg { width: calc(40px * var(--tap-k, 1)); height: calc(40px * var(--tap-k, 1)); filter: drop-shadow(0 1px 0 rgba(255,255,255,.8)); }
+.outfit-arrow.prev { left: 30px; }
+.outfit-arrow.next { right: 30px; }
+.outfit-arrow:hover { background: linear-gradient(150deg, rgba(255,255,255,.78), rgba(255,255,255,.42)); }
+.outfit-arrow:active { transform: scale(.94); box-shadow: 0 5px 14px rgba(28,46,66,.14), inset 0 1px 0 rgba(255,255,255,.9); }
+.outfit-arrow:focus-visible { outline: 3px solid rgba(44,122,120,.45); outline-offset: 3px; }
+/* 文字模式：右侧卡片展开时箭头让位 */
+#app.has-panel:not(.no-text) .outfit-nav { opacity: 0; }
+#app.has-panel:not(.no-text) .outfit-arrow { pointer-events: none; }
+/* 无文字模式（整屏人物）：箭头放在人物腰部高度 */
+#app.no-text .outfit-arrow { top: 46%; }
+
+/* 换装时短暂显示服装名 */
+.outfit-tag {
+  position: absolute; z-index: 7; left: 50%; top: 150px; transform: translate(-50%, -8px);
+  display: flex; align-items: baseline; gap: 12px; padding: 10px 22px; border-radius: 24px;
+  background: rgba(255,255,255,.66); border: 1px solid rgba(255,255,255,.8);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow: 0 8px 22px rgba(28,46,66,.12);
+  font-size: 24px; color: #1f3b57; letter-spacing: 1px; white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease;
+}
+.outfit-tag em { font-style: normal; font-size: 19px; color: #6a7d90; font-variant-numeric: tabular-nums; }
+.outfit-tag.show { opacity: 1; transform: translate(-50%, 0); }
+#app.no-text .outfit-tag { top: 60px; }
 #app.has-panel .avatar { transform: translateX(-230px); }
 
 .presence { position: absolute; z-index: 5; left: 44px; top: 140px; display: flex; align-items: center; gap: 10px; padding: 8px 16px 8px 14px; background: rgba(255,255,255,.9); border: 1px solid var(--line); border-radius: 4px; font-size: 22px; color: var(--ink-2); }

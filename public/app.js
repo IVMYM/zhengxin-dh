@@ -65,6 +65,12 @@
     }
   }
   window.addEventListener('resize', fit); fit();
+  // 整屏按比例缩小（手机/小窗）时，换装箭头放大补偿，保证实际触控尺寸不小于约 48px
+  const fitTap = () => {
+    const sc = (app.getBoundingClientRect().width / (app.offsetWidth || 1080)) || 1;
+    app.style.setProperty('--tap-k', String(Math.min(1.8, Math.max(1, 48 / (96 * sc))).toFixed(3)));
+  };
+  window.addEventListener('resize', fitTap); fitTap();
   if (params.get('kiosk') === '1') document.body.classList.add('kiosk');
 
   /* ---------- 时钟 ---------- */
@@ -617,37 +623,43 @@
     },
     find(id) { return this.list.find((o) => o.id === id && (this.sensitive || !o.sensitive)) || null; },
     rotation() { return this.list.filter((o) => this.sensitive || !o.sensitive); },
-    next() {
+    /** 轮换里相对某一套（默认当前，切换中则以排队的那套为准）前后第 dir 套 */
+    neighbor(dir, fromId) {
       const r = this.rotation(); if (!r.length) return null;
-      const i = r.findIndex((o) => o.id === (this.cur && this.cur.id));
-      return r[(i + 1) % r.length];
+      const base = fromId || (this.pending && this.pending.id) || (this.cur && this.cur.id);
+      const j = window.DHOutfitNav.cycle(r.length, r.findIndex((o) => o.id === base), dir);
+      return r[j] || null;
     },
-    /** 下一套；切换进行中再点就记下来，换完再接着换 */
-    step() { const n = this.next(); if (n) this.apply(n.id); },
-    apply(id, { fade = true } = {}) {
+    next() { return this.neighbor(1, this.cur && this.cur.id); },
+    prev() { return this.neighbor(-1, this.cur && this.cur.id); },
+    /** 下一套 / 上一套；切换进行中再点就排队，换完接着换（连点几下就前进几套） */
+    step(dir = 1) { const n = this.neighbor(dir < 0 ? -1 : 1); if (n) this.apply(n.id, { dir: dir < 0 ? -1 : 1 }); },
+    apply(id, { fade = true, dir = 0 } = {}) {
       const o = this.find(id); if (!o) return false;
-      if (this.switching) { this.pending = id; return true; }
-      if (this.cur && this.cur.id === o.id) return true;
+      if (this.switching) { this.pending = { id: o.id, dir }; return true; }
+      if (this.cur && this.cur.id === o.id) { this.pending = null; return true; }
       this.switching = true;
       const cv = $('#vFade');
       if (fade) {
         // 定格当前画面（口型视频 > 说话视频 > 待机视频）
         const lip = $('#vLip');
         const src = lip.style.opacity === '1' ? lip : (vTalk.style.opacity === '1' ? vTalk : vIdle);
-        try { cv.getContext('2d').drawImage(src, 0, 0, cv.width, cv.height); cv.classList.remove('fading'); cv.classList.add('show'); } catch {}
+        try { cv.getContext('2d').drawImage(src, 0, 0, cv.width, cv.height); cv.classList.remove('fading', 'out-l', 'out-r'); cv.classList.add('show'); } catch {}
       }
       this.cur = o; store.set('outfit', o.id);
+      this.render(fade);
       const talking = vTalk.style.opacity === '1';
       let ready = 0;
       const done = () => {
         if (++ready < 2) return;
         vIdle.play().catch(() => {});
         if (talking) { try { vTalk.currentTime = 0; } catch {} vTalk.play().catch(() => {}); }
-        requestAnimationFrame(() => { cv.classList.add('fading'); cv.classList.remove('show'); });
+        // 旧画面定格按滑动方向轻轻移出并淡出，新服装在下面接上：没有黑帧
+        requestAnimationFrame(() => { cv.classList.add('fading'); if (dir) cv.classList.add(dir > 0 ? 'out-l' : 'out-r'); cv.classList.remove('show'); });
         setTimeout(() => {
-          this.switching = false; cv.classList.remove('fading');
-          if (this.pending) { const p = this.pending; this.pending = null; this.apply(p); }
-        }, fade ? 480 : 0);
+          this.switching = false; cv.classList.remove('fading', 'out-l', 'out-r');
+          if (this.pending) { const p = this.pending; this.pending = null; this.apply(p.id, { dir: p.dir }); }
+        }, fade ? 520 : 0);
         this.preload();
       };
       const load = (v, url) => {
@@ -666,14 +678,34 @@
       ev('outfit', { id: o.id });
       return true;
     },
-    /** 预加载下一套的待机/说话视频和海报 */
+    /** 预加载下一套的待机/说话视频、上一套的待机视频和两边的海报：箭头、滑动两个方向都能马上换 */
     preload() {
-      const n = this.next(); if (!n || n.id === (this.cur && this.cur.id)) return;
-      const pi = $('#vPreIdle'), pt = $('#vPreTalk');
-      if (pi.dataset.id === n.id) return;
-      pi.dataset.id = n.id; pi.src = n.idle; pi.load();
-      pt.src = n.talk || n.idle; pt.load();
-      if (n.poster) { const im = new Image(); im.src = n.poster; }
+      const n = this.next(), b = this.prev(), curId = this.cur && this.cur.id;
+      if (n && n.id !== curId) {
+        const pi = $('#vPreIdle'), pt = $('#vPreTalk');
+        if (pi.dataset.id !== n.id) {
+          pi.dataset.id = n.id; pi.src = n.idle; pi.load();
+          pt.src = n.talk || n.idle; pt.load();
+        }
+        if (n.poster) { const im = new Image(); im.src = n.poster; }
+      }
+      if (b && b.id !== curId && (!n || b.id !== n.id)) {
+        let pp = $('#vPrePrev');
+        if (!pp) { pp = document.createElement('video'); pp.id = 'vPrePrev'; pp.muted = true; pp.playsInline = true; pp.preload = 'auto'; pp.hidden = true; $('#stage').appendChild(pp); }
+        if (pp.dataset.id !== b.id) { pp.dataset.id = b.id; pp.src = b.idle; pp.load(); }
+        if (b.poster) { const im = new Image(); im.src = b.poster; }
+      }
+    },
+    /** 服装名提示（换装时短暂显示「名称 · 第几套/共几套」），箭头无障碍标签同步 */
+    render(flash) {
+      const r = this.rotation(); const i = r.findIndex((o) => o.id === (this.cur && this.cur.id));
+      const nav = $('#outfitNav'); if (nav) nav.hidden = r.length < 2;
+      const tag = $('#outfitTag'); if (!tag || !this.cur) return;
+      $('#outfitTagName').textContent = this.cur.name.replace(/（默认）$/, '');
+      $('#outfitTagIdx').textContent = i >= 0 ? `${i + 1} / ${r.length}` : '';
+      if (!flash) return;
+      tag.classList.add('show'); clearTimeout(this.tagTimer);
+      this.tagTimer = setTimeout(() => tag.classList.remove('show'), 1800);
     },
   };
 
@@ -1285,22 +1317,44 @@
   }
   // 画面手势：轻触 = 换下一套衣服（播报中也能换，声音不断）；长按 0.8 秒 = 说话 / 打断播报
   const LONG_MS = 800;
-  let pressT = null, pressLong = false, pressXY = null;
+  // 左右滑动 = 上一套/下一套（手指左滑换下一套）；拖动时人物跟手轻移，松手后按方向滑出淡入
+  let pressT = null, pressLong = false, pressXY = null, swipe = null;
+  const avatarEl = $('#avatar');
+  const stageScale = () => (app.getBoundingClientRect().width / 1080) || 1;
+  const setDrag = (px) => { avatarEl.style.setProperty('--drag', px + 'px'); };
+  const endDrag = () => { avatarEl.classList.remove('dragging'); setDrag(0); };
   $('#stage').addEventListener('pointerdown', (e) => {
-    if (e.button > 0 || e.target.closest('#panel, #cue, #hot, button, a, input, select')) return;
+    if (e.button > 0 || e.target.closest('#panel, #cue, #hot, button, a, input, select, .mic-power-zone, .outfit-nav')) return;
     pressLong = false; pressXY = [e.clientX, e.clientY];
-    clearTimeout(pressT); pressT = setTimeout(() => { pressT = null; pressLong = true; tapTalk(); }, LONG_MS);
+    swipe = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId, live: false };
+    clearTimeout(pressT); pressT = setTimeout(() => { pressT = null; pressLong = true; swipe = null; tapTalk(); }, LONG_MS);
   });
   $('#stage').addEventListener('pointermove', (e) => {
     if (pressT && pressXY && Math.hypot(e.clientX - pressXY[0], e.clientY - pressXY[1]) > 30) { clearTimeout(pressT); pressT = null; pressXY = null; }
+    if (!swipe || e.pointerId !== swipe.id) return;
+    const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
+    if (!swipe.live && Math.abs(dx) > 12 && Math.abs(dx) > 1.4 * Math.abs(dy)) { swipe.live = true; avatarEl.classList.add('dragging'); }
+    if (swipe.live) setDrag(Math.max(-32, Math.min(32, dx / stageScale() * 0.25)));
   });
-  $('#stage').addEventListener('pointerup', () => {
+  $('#stage').addEventListener('pointerup', (e) => {
+    const sw = swipe; swipe = null;
+    if (sw && e.pointerId === sw.id) {
+      const dir = window.DHOutfitNav.swipeDir({ dx: e.clientX - sw.x, dy: e.clientY - sw.y, dt: performance.now() - sw.t });
+      endDrag();
+      if (dir) { clearTimeout(pressT); pressT = null; pressXY = null; touch(); if (S.mode === 'attract') exitAttract(); Outfit.step(dir); return; }
+    }
     if (!pressT) { pressXY = null; return; }
     clearTimeout(pressT); pressT = null;
-    if (!pressLong && pressXY) { touch(); if (S.mode === 'attract') exitAttract(); Outfit.step(); }
+    if (!pressLong && pressXY) { touch(); if (S.mode === 'attract') exitAttract(); Outfit.step(1); }
     pressXY = null;
   });
-  $('#stage').addEventListener('pointercancel', () => { clearTimeout(pressT); pressT = null; pressXY = null; });
+  $('#stage').addEventListener('pointercancel', () => { clearTimeout(pressT); pressT = null; pressXY = null; swipe = null; endDrag(); });
+  // 左右玻璃箭头：上一套 / 下一套
+  for (const [sel, dir] of [['#outfitPrev', -1], ['#outfitNext', 1]]) {
+    const b = $(sel); if (!b) continue;
+    b.addEventListener('pointerdown', (e) => e.stopPropagation());
+    b.addEventListener('click', (e) => { e.stopPropagation(); touch(); if (S.mode === 'attract') exitAttract(); Outfit.step(dir); });
+  }
   $('#stage').addEventListener('contextmenu', (e) => e.preventDefault());
   // 左上角隐藏热区长按 2 秒打开现场设置（无文字模式下标识不显示）
   let hotTimer;

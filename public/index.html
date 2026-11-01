@@ -65,6 +65,12 @@
         <video id="vLip" muted playsinline preload="auto"></video>
         <canvas id="vFade" width="720" height="1280"></canvas>
       </div>
+      <!-- 左右玻璃箭头换装（也可左右滑动）；换装时短暂显示服装名 -->
+      <div class="outfit-nav" id="outfitNav">
+        <button type="button" class="outfit-arrow prev" id="outfitPrev" aria-label="上一套服装"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button type="button" class="outfit-arrow next" id="outfitNext" aria-label="下一套服装"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="outfit-tag" id="outfitTag" aria-live="polite"><span id="outfitTagName"></span><em id="outfitTagIdx"></em></div>
       <div class="presence" id="presence"><i></i><span id="presenceText">小信 · 在线服务</span></div>
 
       <aside class="panel" id="panel" aria-live="polite"></aside>
@@ -168,6 +174,7 @@
 <script src="/sync.js"></script>
 <script src="/gate-core.js"></script>
 <script src="/lipsync.js"></script>
+<script src="/outfit-nav.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>
